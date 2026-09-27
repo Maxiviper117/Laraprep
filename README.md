@@ -1,67 +1,99 @@
-# Your Package
+# Laraprep
 
-[![Tests](https://github.com/your-vendor/your-package/actions/workflows/tests.yml/badge.svg)](https://github.com/your-vendor/your-package/actions/workflows/tests.yml)
-[![Latest Version](https://img.shields.io/packagist/v/your-vendor/your-package.svg)](https://packagist.org/packages/your-vendor/your-package)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
+Laraprep is a Composer-installed CLI for safe, repeatable Laravel backend setup tasks.
 
-A short, outcome-focused description of the package.
+The MVP command is `vendor/bin/laraprep fortify:backend`. It installs and configures Laravel Fortify for backend-only authentication, defaults to dry-run mode, creates backups before file changes, and avoids generating frontend auth views.
 
-## Creating a package from this template
+## Requirements
 
-1. Click **Use this template** on GitHub and clone the new repository.
-2. Replace every placeholder listed below (matching case matters).
-3. Run `composer update`, then `composer check`.
-4. Replace the sample `Package` class and test with your implementation.
-5. Enable **Allow auto-merge** if you add Dependabot, and enable GitHub Actions.
-
-GitHub Actions jobs are intentionally skipped while this repository is named
-`template-php-package`. They activate automatically in repositories created
-from the template with a different name.
-
-| Placeholder | Example |
-| --- | --- |
-| `your-vendor` | `maxiviper117` |
-| `your-package` | `result-flow` |
-| `YourVendor` | `Maxiviper117` |
-| `YourPackage` | `ResultFlow` |
-| `Your Name` | `David Example` |
-
-Search before publishing: `git grep -n -E 'your-vendor|your-package|YourVendor|YourPackage|Your Name'`.
+- PHP 8.3+
+- Composer 2
+- A Laravel 13 project
 
 ## Installation
 
 ```bash
-composer require your-vendor/your-package
+composer require maxiviper117/laraprep --dev
 ```
 
 ## Usage
 
-```php
-use YourVendor\YourPackage\Package;
+Dry-run is the default:
 
-echo Package::name();
+```bash
+vendor/bin/laraprep fortify:backend
 ```
+
+Apply the plan:
+
+```bash
+vendor/bin/laraprep fortify:backend --apply
+```
+
+Example with explicit options:
+
+```bash
+vendor/bin/laraprep fortify:backend --apply --two-factor --test-route --no-migrate
+```
+
+## Options
+
+- `--registration` / `--no-registration`
+- `--reset-passwords` / `--no-reset-passwords`
+- `--verify-email` / `--no-verify-email`
+- `--two-factor`
+- `--passkeys`
+- `--no-migrate`
+- `--no-backup`
+- `--force`
+- `--test-route`
+- `--apply`
+
+## Safety behavior
+
+- Dry-run by default
+- Backs up existing files before Laraprep edits them unless `--no-backup` is used
+- Never overwrites an existing backup; collisions become timestamped backups
+- Uses AST edits for `app/Models/User.php` and `bootstrap/providers.php`
+- Stops on the first apply failure and reports partial completion
+- Supports Laravel 13 only in the MVP
+
+## Expected backend endpoints
+
+- `POST /login`
+- `POST /logout`
+- `POST /register` when registration is enabled
+- `POST /forgot-password` and `POST /reset-password` when password resets are enabled
+- `POST /email/verification-notification` and `GET /email/verify/{id}/{hash}` when email verification is enabled
+
+Confirm the actual route set with `php artisan route:list` after apply.
 
 ## Development
 
 ```bash
 composer install
 composer check
-```
-
-### Documentation
-
-The documentation site uses VitePress and pnpm:
-
-```bash
 pnpm install
-pnpm docs:dev
+pnpm docs:build
 ```
 
-Run `pnpm docs:build` before publishing documentation changes. The included
-GitHub Pages workflow deploys `docs/` after pushes to `main`. In the GitHub
-repository settings, set **Pages → Build and deployment → Source** to
-**GitHub Actions**.
+### Local workbench
+
+For real end-to-end validation against a disposable Laravel 13 app, use the local gitignored workbench:
+
+```powershell
+./scripts/setup-workbench.ps1
+./scripts/run-workbench-fortify.ps1
+./scripts/run-workbench-fortify.ps1 -Apply
+```
+
+Reset it with:
+
+```powershell
+./scripts/reset-workbench.ps1
+```
+
+The setup script creates `workbench/laravel13-app` using `composer create-project laravel/laravel "^13.0"` and installs this package into that app via a local Composer path repository.
 
 ## License
 
