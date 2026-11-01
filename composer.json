@@ -8,7 +8,7 @@
     "require": {"php": "^8.2"},
     "require-dev": {
         "laravel/pint": "^1.24",
-        "pestphp/pest": "^3.8",
+        "pestphp/pest": "^5.3",
         "phpstan/phpstan": "^2.1",
         "rector/rector": "^2.3"
     },
